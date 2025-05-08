@@ -7,18 +7,21 @@ import com.rentacar.repository.UserRepository;
 import com.rentacar.repository.VerificationTokenRepository;
 import com.rentacar.service.email.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class UserService {
 
     @Autowired
+private PasswordEncoder passwordEncoder;
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private VerificationToken tokenRepository;
+    private VerificationTokenRepository tokenRepository;
 
     @Autowired
     private EmailService emailService;
@@ -50,27 +53,20 @@ public class UserService {
 
         // Doğrulama e-postası gönder
         String confirmationLink = "http://localhost:3000/set-password?token=" + token;
-        emailService.send(
+        emailService.sendVerificationLink(
                 user.getEmail(),
-                "Set Your Password",
-                "Click the following link to set your password: " + confirmationLink
+                token
+                
         );
 
         return savedUser;
     }
-
-    public void deleteAccount(String email, String password) throws Exception {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        if (user.getPassword() == null) {
-            throw new Exception("User does not have a password set yet.");
-        }
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new Exception("Incorrect password");
-        }
-
+    public boolean deleteUserByEmail(String email, String rawPassword) {
+        Optional<User> optUser = userRepository.findByEmail(email);
+        if (optUser.isEmpty()) return false;
+        User user = optUser.get();
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) return false;
         userRepository.delete(user);
+        return true;
     }
 }

@@ -2,14 +2,20 @@ package com.rentacar.model;
 
 import java.time.LocalDateTime;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
-
-import org.springframework.data.annotation.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 @Entity
 public class VerificationToken {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Otomatik id üretilir
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private String token;
 
     @javax.persistence.OneToOne

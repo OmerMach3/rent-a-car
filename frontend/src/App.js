@@ -9,6 +9,7 @@ import LoginPage from "./components/LoginPage";
 import HomePage from "./components/HomePage";
 import DeleteAccount from "./components/DeleteAccount";
 import CreateAccount from "./components/CreateAccount";
+import SetPassword from "./components/SetPassword";
 import "./App.css";
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
 
           {/* Hesap Oluşturma */}
           <Route path="/create-account" element={<CreateAccount />} />
-
+          <Route path="/set-password" element={<SetPassword />} />
           {/* Hesap Silme */}
           <Route path="/delete-account" element={<DeleteAccount />} />
         </Routes>

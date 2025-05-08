@@ -46,14 +46,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .cors().and().csrf().disable() // CORS filtresini etkinleştir
-                .authorizeRequests()
-                    .antMatchers("/api/auth/**").permitAll()
-                    .antMatchers("/api/user/register").permitAll() // Kullanıcı kayıt endpoint'ine izin ver
-                    .antMatchers("/api/user/**").authenticated()
-                    .anyRequest().authenticated()
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .cors().and().csrf().disable() // CORS filtresini etkinleştir ve CSRF'yi kapat
+        .authorizeRequests()
+            .antMatchers("/api/auth/**").permitAll()
+            .antMatchers("/api/user/register").permitAll()
+            .antMatchers("/api/user/deleteAccount").permitAll() 
+            .antMatchers("/api/user/**").authenticated() 
+            .anyRequest().authenticated()
+        .and()
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     @Bean
