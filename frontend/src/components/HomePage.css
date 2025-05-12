@@ -1,0 +1,56 @@
+/* HomePage.css */
+.home-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.home-header {
+  background-color: white;
+  padding: 20px 50px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.main-content {
+  padding: 60px 20px;
+}
+
+.main-content h2 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.main-content p {
+  font-size: 18px;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto 40px;
+}
+
+.admin-actions {
+  margin-top: 50px;
+}
+
+.action-card {
+  text-align: left;
+}
+
+.action-card h3 {
+  font-size: 22px;
+  color: #2680aa;
+  margin-bottom: 10px;
+}
+
+.action-card p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.action-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}

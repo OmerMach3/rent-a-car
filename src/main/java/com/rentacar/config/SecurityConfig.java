@@ -51,6 +51,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/api/auth/**").permitAll()
             .antMatchers("/api/user/register").permitAll()
             .antMatchers("/api/user/deleteAccount").permitAll() 
+            .antMatchers("/api/cars/**").permitAll() // For testing, make car endpoints accessible
             .antMatchers("/api/user/**").authenticated() 
             .anyRequest().authenticated()
         .and()
