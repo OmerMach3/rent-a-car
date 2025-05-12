@@ -1,6 +1,7 @@
 package com.rentacar.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,27 +26,29 @@ public class LoginController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @PostMapping("/api/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // Kullanıcı adıyla admin arama
-        Optional<Admin> optionalAdmin = adminRepository.findByUsername(loginRequest.getUsername());
+ @PostMapping("/api/login")
+public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    System.out.println("Login request received: " + loginRequest.getUsername());
+    
+    // Kullanıcı adıyla admin arama
+    Optional<Admin> optionalAdmin = adminRepository.findByUsername(loginRequest.getUsername());
+    
+    if (optionalAdmin.isPresent()) {
+        Admin admin = optionalAdmin.get();
         
-        if (optionalAdmin.isPresent()) {
-            Admin admin = optionalAdmin.get();
+        // Şifre kontrolü
+        if (passwordEncoder.matches(loginRequest.getPassword(), admin.getPasswordHash())) {
+            // Başarılı giriş, token ve diğer bilgileri döndür
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", "admin_token_" + System.currentTimeMillis());
+            response.put("username", admin.getUsername());
+            response.put("role", admin.getRole().name());
             
-            // Şifre kontrolü
-            if (passwordEncoder.matches(loginRequest.getPassword(), admin.getPasswordHash())) {
-                // Başarılı giriş, token ve diğer bilgileri döndür
-                Map<String, Object> response = new HashMap<>();
-                response.put("token", "admin_token_" + System.currentTimeMillis());
-                response.put("username", admin.getUsername());
-                response.put("role", admin.getRole().name());
-                
-                return ResponseEntity.ok(response);
-            }
+            return ResponseEntity.ok(response);
         }
-        
-        // Hatalı giriş
-        return ResponseEntity.badRequest().body("Invalid username or password");
     }
+    
+    // Hatalı giriş
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+}
 }

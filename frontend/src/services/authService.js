@@ -4,16 +4,15 @@ const API_URL = "http://localhost:8081"; // base URL
 
 export const login = async (username, password) => {
   try {
-    // Kullanıcı adı ve şifreyi doğrudan gönderiyoruz
+    console.log("Login attempt with:", { username, password }); // Debug için
     const response = await axios.post(`${API_URL}/api/login`, {
-      username: username, // artık username olarak gönderiyoruz, email değil
+      username: username,
       password: password,
     });
-
-    // API yanıtını doğrudan döndür
+    console.log("Login response:", response.data); // Debug için
     return response.data;
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Login error details:", error.response || error); // Daha detaylı hata bilgisi
     throw error;
   }
 };
