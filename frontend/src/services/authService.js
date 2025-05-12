@@ -1,25 +1,16 @@
-// authService.js - Email kullanacak şekilde güncellendi
 import axios from "axios";
 
 const API_URL = "http://localhost:8081"; // base URL
 
 export const login = async (username, password) => {
   try {
-    // Username'i email olarak gönderiyoruz
+    // Kullanıcı adı ve şifreyi doğrudan gönderiyoruz
     const response = await axios.post(`${API_URL}/api/login`, {
-      email: username, // username parametresini email olarak kullan
+      username: username, // artık username olarak gönderiyoruz, email değil
       password: password,
     });
 
-    // Eğer response.data bir string ise, onu bir objeye dönüştür
-    if (typeof response.data === "string") {
-      return {
-        token: response.data,
-        username: username,
-        role: "SYSTEM_ADMIN",
-      };
-    }
-
+    // API yanıtını doğrudan döndür
     return response.data;
   } catch (error) {
     console.error("Login error:", error);

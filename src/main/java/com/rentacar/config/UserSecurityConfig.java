@@ -16,6 +16,7 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
             .authorizeRequests()
             .antMatchers("/api/user/**").permitAll()
+            .antMatchers("/api/login").permitAll() // Bu satırı ekleyin!
             .anyRequest().authenticated();
     }
 }
