@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,16 +31,52 @@ public class CarService {
         return convertToDTO(car);
     }
 
-    public CarDTO createCar(CarDTO carDTO) {
-        // Check if license plate already exists
-        if (carRepository.existsByLicensePlate(carDTO.getLicensePlate())) {
-            throw new IllegalArgumentException("A car with this license plate already exists");
-        }
-
-        Car car = convertToEntity(carDTO);
-        Car savedCar = carRepository.save(car);
-        return convertToDTO(savedCar);
+public CarDTO createCar(CarDTO carDTO) {
+  
+    // Zorunlu alanların dolu olduğunu kontrol et
+    if (carDTO.getMake() == null || carDTO.getMake().trim().isEmpty()) {
+        throw new IllegalArgumentException("Car make cannot be empty");
     }
+    if (carDTO.getModel() == null || carDTO.getModel().trim().isEmpty()) {
+        throw new IllegalArgumentException("Car model cannot be empty");
+    }
+    if (carDTO.getYear() == null) {
+        throw new IllegalArgumentException("Car year cannot be empty");
+    }
+    if (carDTO.getLicensePlate() == null || carDTO.getLicensePlate().trim().isEmpty()) {
+        throw new IllegalArgumentException("License plate cannot be empty");
+    }
+    if (carDTO.getDailyRate() == null) {
+        throw new IllegalArgumentException("Daily rate cannot be empty");
+    }
+
+    // Aynı plaka numarasına sahip başka bir araba var mı kontrol et
+    if (carRepository.existsByLicensePlate(carDTO.getLicensePlate())) {
+        throw new IllegalArgumentException("A car with this license plate already exists: " + carDTO.getLicensePlate());
+    }
+
+    // Yıl geçerli mi kontrol et (1900'den günümüze)
+    int currentYear = java.time.Year.now().getValue() + 1; // Gelecek yıl modelleri için +1
+    if (carDTO.getYear() < 1900 || carDTO.getYear() > currentYear) {
+        throw new IllegalArgumentException("Year must be between 1900 and " + currentYear);
+    }
+
+    // Günlük ücret pozitif olmalı
+    if (carDTO.getDailyRate().compareTo(BigDecimal.ZERO) <= 0) {
+        throw new IllegalArgumentException("Daily rate must be a positive number");
+    }
+
+    // Entity'ye dönüştür ve kaydet
+    Car car = convertToEntity(carDTO);
+    Car savedCar = carRepository.save(car);
+    
+    // Logla
+    System.out.println("New car created: " + savedCar.getMake() + " " + savedCar.getModel() + 
+                       " (License Plate: " + savedCar.getLicensePlate() + ")");
+    
+    return convertToDTO(savedCar);
+}
+    
 
     public CarDTO updateCar(Long id, CarDTO carDTO) {
         Car existingCar = carRepository.findById(id)
@@ -73,10 +111,20 @@ public class CarService {
     }
 
     public void deleteCar(Long id) {
-        if (!carRepository.existsById(id)) {
-            throw new EntityNotFoundException("Car not found with id: " + id);
-        }
-        carRepository.deleteById(id);
+         Car car = carRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Car not found with id: " + id));
+    
+    // Araba şu anda kiralanmış mı kontrol et
+    if (car.getStatus() == Car.Status.RENTED) {
+        throw new IllegalStateException("Cannot delete car with id: " + id + " because it is currently rented");
+    }
+    
+    // Silme işlemi
+    carRepository.deleteById(id);
+    
+    // Log
+    System.out.println("Car deleted: " + car.getMake() + " " + car.getModel() + 
+                      " (License Plate: " + car.getLicensePlate() + ")");
     }
 
     public List<CarDTO> getAvailableCars() {

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,12 +41,23 @@ public class CarController {
     @PostMapping
     public ResponseEntity<?> createCar(@Valid @RequestBody CarDTO carDTO) {
         try {
-            CarDTO createdCar = carService.createCar(carDTO);
-            return new ResponseEntity<>(createdCar, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", e.getMessage()));
-        }
+        CarDTO createdCar = carService.createCar(carDTO);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Car created successfully!");
+        response.put("car", createdCar);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    } catch (IllegalArgumentException e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.badRequest().body(errorResponse);
+    } catch (Exception e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", "An unexpected error occurred: " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
     }
 
     @PutMapping("/{id}")
@@ -60,15 +73,39 @@ public class CarController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCar(@PathVariable Long id) {
-        try {
-            carService.deleteCar(id);
-            return ResponseEntity.ok(Map.of("message", "Car deleted successfully"));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+  
+
+@DeleteMapping("/{id}")
+public ResponseEntity<?> deleteCar(@PathVariable Long id) {
+    try {
+        carService.deleteCar(id);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Car deleted successfully");
+        
+        return ResponseEntity.ok(response);
+    } catch (EntityNotFoundException e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", e.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    } catch (IllegalStateException e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", e.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    } catch (Exception e) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", "An unexpected error occurred: " + e.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
+}
+    
 
     @GetMapping("/available")
     public ResponseEntity<List<CarDTO>> getAvailableCars() {

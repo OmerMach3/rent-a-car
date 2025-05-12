@@ -60,35 +60,119 @@ const AddCarPage = () => {
   };
 
   const validate = () => {
-    const newErrors = {};
-    if (!formData.make) newErrors.make = "Make is required";
-    if (!formData.model) newErrors.model = "Model is required";
-    if (!formData.year) newErrors.year = "Year is required";
-    if (!formData.licensePlate)
-      newErrors.licensePlate = "License plate is required";
-    if (!formData.dailyRate) newErrors.dailyRate = "Daily rate is required";
+    // frontend/src/components/AddCarPage.js
 
-    // Validate year is a number between 1900 and current year + 1
-    const currentYear = new Date().getFullYear();
-    if (
-      formData.year &&
-      (isNaN(formData.year) ||
-        formData.year < 1900 ||
-        formData.year > currentYear + 1)
-    ) {
-      newErrors.year = `Year must be between 1900 and ${currentYear + 1}`;
-    }
+    // Form doğrulama mantığını geliştirelim
+    const validate = () => {
+      const newErrors = {};
 
-    // Validate daily rate is a positive number
-    if (
-      formData.dailyRate &&
-      (isNaN(formData.dailyRate) || formData.dailyRate <= 0)
-    ) {
-      newErrors.dailyRate = "Daily rate must be a positive number";
-    }
+      // Zorunlu alanlar
+      if (!formData.make) newErrors.make = "Make is required";
+      if (!formData.model) newErrors.model = "Model is required";
+      if (!formData.year) newErrors.year = "Year is required";
+      if (!formData.licensePlate)
+        newErrors.licensePlate = "License plate is required";
+      if (!formData.dailyRate) newErrors.dailyRate = "Daily rate is required";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+      // Yıl geçerli aralıkta mı?
+      const currentYear = new Date().getFullYear() + 1; // Gelecek yıl modelleri için +1
+      if (
+        formData.year &&
+        (isNaN(formData.year) ||
+          formData.year < 1900 ||
+          formData.year > currentYear)
+      ) {
+        newErrors.year = `Year must be between 1900 and ${currentYear}`;
+      }
+
+      // Günlük ücret pozitif mi?
+      if (
+        formData.dailyRate &&
+        (isNaN(formData.dailyRate) || parseFloat(formData.dailyRate) <= 0)
+      ) {
+        newErrors.dailyRate = "Daily rate must be a positive number";
+      }
+
+      // Plaka formatı kontrolü (isteğe bağlı - her ülkenin farklı formatı olabilir)
+      if (
+        formData.licensePlate &&
+        !/^[A-Z0-9-]{2,10}$/.test(formData.licensePlate)
+      ) {
+        newErrors.licensePlate = "Invalid license plate format";
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    // Form gönderimini geliştirelim
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      if (!validate()) {
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+          "http://localhost:8081/api/cars",
+          formData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Başarılı geri bildirim
+        setSuccess(true);
+        setLoading(false);
+
+        // Form verilerini sıfırla (isteğe bağlı)
+        setFormData({
+          make: "",
+          model: "",
+          year: "",
+          color: "",
+          licensePlate: "",
+          vinNumber: "",
+          mileage: "",
+          fuelType: "",
+          transmission: "AUTOMATIC",
+          category: "ECONOMY",
+          dailyRate: "",
+          status: "AVAILABLE",
+          features: [],
+          description: "",
+        });
+
+        // Mesaj gösterildikten sonra yönlendirme
+        setTimeout(() => {
+          navigate("/cars");
+        }, 2000);
+      } catch (error) {
+        setLoading(false);
+
+        // Sunucudan gelen hata mesajlarını göster
+        if (error.response && error.response.data) {
+          if (error.response.data.message) {
+            setErrors({
+              submit: error.response.data.message,
+            });
+          } else {
+            setErrors({
+              submit: "Failed to add car. Please try again.",
+            });
+          }
+        } else {
+          setErrors({ submit: "An error occurred while adding the car." });
+        }
+      }
+    };
   };
 
   const handleSubmit = async (e) => {
