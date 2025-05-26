@@ -16,6 +16,8 @@ import CarDetailsPage from "./components/CarDetailsPage";
 import EndUserLoginPage from "./components/EndUserLogin";
 import ProfileViewPage from "./components/ProfileViewPage";
 import UserProfilePage from "./components/UserProfilePage";
+import ForgotPassword from "./components/ForgotPassword"; // NEW
+import ResetPassword from "./components/ResetPassword"; // NEW
 import "./App.css";
 
 function App() {
@@ -33,6 +35,10 @@ function App() {
           {/* Hesap Oluşturma */}
           <Route path="/create-account" element={<CreateAccount />} />
           <Route path="/set-password" element={<SetPassword />} />
+
+          {/* NEW: Password Reset Routes */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Hesap Silme */}
           <Route path="/delete-account" element={<DeleteAccount />} />
           {/* User Profile Routes - Updated with ID support */}

@@ -67,6 +67,10 @@ function EndUserLoginPage() {
     navigate("/home");
   };
 
+  const handleForgotPassword = () => {
+    navigate("/forgot-password");
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -97,6 +101,23 @@ function EndUserLoginPage() {
               placeholder="Enter your password"
               autoComplete="current-password"
             />
+          </div>
+
+          {/* ADDED: Forgot Password Link */}
+          <div style={{ textAlign: "right", marginBottom: "15px" }}>
+            <span
+              onClick={handleForgotPassword}
+              style={{
+                color: "#4a90e2",
+                cursor: "pointer",
+                fontSize: "14px",
+                textDecoration: "none",
+              }}
+              onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+              onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+            >
+              Forgot My Password?
+            </span>
           </div>
 
           <button type="submit" className="login-button" disabled={isLoading}>
