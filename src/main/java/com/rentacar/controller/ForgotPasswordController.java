@@ -181,4 +181,19 @@ public class ForgotPasswordController {
                     .body(Map.of("valid", false, "message", "Error verifying token"));
         }
     }
+    @GetMapping("/test")
+public ResponseEntity<?> testEndpoint() {
+    return ResponseEntity.ok()
+            .body(Map.of("message", "Password reset controller is working!", 
+                        "timestamp", LocalDateTime.now()));
+}
+
+// Also add this method to test the forgot password endpoint specifically
+@GetMapping("/forgot/test")  
+public ResponseEntity<?> testForgotEndpoint() {
+    return ResponseEntity.ok()
+            .body(Map.of("message", "Forgot password endpoint is accessible", 
+                        "endpoint", "/api/password/forgot",
+                        "method", "POST"));
+}
 }

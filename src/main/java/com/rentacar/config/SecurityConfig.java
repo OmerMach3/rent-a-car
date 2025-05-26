@@ -56,7 +56,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/api/user/register").permitAll() // User registration
             .antMatchers("/api/user/deleteAccount").permitAll() // Account deletion
             .antMatchers("/api/user/set-password").permitAll() // Password setting
-            
+            .antMatchers("/api/password/**").permitAll() // Add this line
             // FIXED: Allow user profile access for authenticated users
             .antMatchers("/api/user/profile/**").permitAll() // User profile endpoints
             .antMatchers("/api/user/profile").permitAll() // User profile by email

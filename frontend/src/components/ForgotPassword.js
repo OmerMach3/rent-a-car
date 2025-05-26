@@ -39,30 +39,68 @@ function ForgotPassword() {
         }
       );
 
-      const data = await response.json();
+      // Check if response is ok first
+      if (!response.ok) {
+        // Handle different error status codes
+        if (response.status === 404) {
+          setError(
+            "Password reset service is currently unavailable. Please try again later or contact support."
+          );
+          return;
+        } else if (response.status === 500) {
+          setError("Server error occurred. Please try again later.");
+          return;
+        }
+      }
+
+      // Try to parse JSON response
+      let data;
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.error("JSON parsing error:", jsonError);
+          setError("Invalid response from server. Please try again.");
+          return;
+        }
+      } else {
+        // If not JSON, try to get text
+        const textResponse = await response.text();
+        console.log("Non-JSON response:", textResponse);
+        setError("Unexpected response format from server.");
+        return;
+      }
 
       if (response.ok) {
-        setMessage(data.message);
+        setMessage(data.message || "Password reset email sent successfully.");
         setEmailSent(true);
         setEmail(""); // Clear the form
       } else {
         setError(data.message || "An error occurred. Please try again.");
       }
     } catch (error) {
-      console.error("Forgot password error:", error);
-      setError("An error occurred. Please try again.");
+      console.error("Network/Fetch error:", error);
+
+      // Check if it's a network error
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
+        setError(
+          "Cannot connect to server. Please ensure the backend server is running on port 8081."
+        );
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleBackToLogin = () => {
-    // This would typically use navigate("/user-login")
     window.location.href = "/user-login";
   };
 
   const handleBackToHome = () => {
-    // This would typically use navigate("/home")
     window.location.href = "/home";
   };
 
@@ -113,7 +151,7 @@ function ForgotPassword() {
               password.
             </p>
 
-            <div onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
               {error && (
                 <div
                   style={{
@@ -124,6 +162,7 @@ function ForgotPassword() {
                     marginBottom: "20px",
                     textAlign: "center",
                     border: "1px solid #f5c6cb",
+                    fontSize: "14px",
                   }}
                 >
                   {error}
@@ -147,6 +186,7 @@ function ForgotPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
+                  required
                   style={{
                     width: "100%",
                     padding: "12px",
@@ -169,7 +209,7 @@ function ForgotPassword() {
               </div>
 
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={isLoading}
                 style={{
                   width: "100%",
@@ -196,7 +236,7 @@ function ForgotPassword() {
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
               </button>
-            </div>
+            </form>
           </>
         ) : (
           <div style={{ textAlign: "center" }}>
@@ -210,7 +250,7 @@ function ForgotPassword() {
                 border: "1px solid #c3e6cb",
               }}
             >
-              <strong>✅ Email Sent!</strong>
+              <strong> Email Sent!</strong>
               <p style={{ margin: "10px 0 0 0" }}>{message}</p>
             </div>
 
@@ -289,7 +329,7 @@ function ForgotPassword() {
               e.target.style.backgroundColor = "transparent";
             }}
           >
-            🏠 Back to Home
+            Back to Home
           </button>
 
           {emailSent && (
@@ -326,4 +366,4 @@ function ForgotPassword() {
   );
 }
 
-export default ForgotPasswordPage;
+export default ForgotPassword;
