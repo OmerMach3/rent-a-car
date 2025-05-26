@@ -219,42 +219,6 @@ function HomePage() {
             </div>
           </div>
         )}
-
-        {/* Additional information section */}
-        {!isAnyUserAuthenticated && (
-          <div style={{ marginTop: "60px", textAlign: "center" }}>
-            <h3 style={{ color: "#333", marginBottom: "20px" }}>
-              Featured Services
-            </h3>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "40px",
-                flexWrap: "wrap",
-                maxWidth: "800px",
-                margin: "0 auto",
-              }}
-            >
-              <div style={featureStyle}>
-                <h4>🚗 Wide Selection</h4>
-                <p>Economy to luxury vehicles</p>
-              </div>
-              <div style={featureStyle}>
-                <h4>📱 Easy Booking</h4>
-                <p>Book online in minutes</p>
-              </div>
-              <div style={featureStyle}>
-                <h4>🔧 Well Maintained</h4>
-                <p>Regular maintenance & safety checks</p>
-              </div>
-              <div style={featureStyle}>
-                <h4>🕒 24/7 Support</h4>
-                <p>Round-the-clock customer service</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
