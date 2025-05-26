@@ -47,6 +47,7 @@ function HomePage() {
   const handleUserLogin = () => navigate("/user-login");
   const handleDeleteAccount = () => navigate("/delete-account");
   const handleCarListing = () => navigate("/cars");
+  const handleUserProfile = () => navigate("/user-profile"); // New handler
 
   return (
     <div className="home-container">

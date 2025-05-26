@@ -1,8 +1,15 @@
 package com.rentacar.controller;
-
+// Add these imports to your existing UserController.java
+import com.rentacar.dto.UpdateUserProfileRequest;
+import com.rentacar.dto.UserProfileResponse;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import com.rentacar.dto.DeleteAccountRequest;
 import com.rentacar.dto.SetPasswordRequest;
+import com.rentacar.dto.UpdateUserProfileRequest;
 import com.rentacar.dto.UserDTO;
+import com.rentacar.dto.UserProfileResponse;
 import com.rentacar.model.User;
 import com.rentacar.model.VerificationToken;
 import com.rentacar.repository.UserRepository;
@@ -18,7 +25,9 @@ import javax.validation.Valid;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 
 @RestController
@@ -74,4 +83,105 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
 
     return ResponseEntity.ok("Password set successfully.");
 }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile(@RequestParam String email) {
+        try {
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found"));
+            }
+
+            User user = optionalUser.get();
+            
+            // Create response DTO
+            UserProfileResponse profileResponse = new UserProfileResponse();
+            profileResponse.setId(user.getId());
+            profileResponse.setFirstName(user.getFirstName());
+            profileResponse.setLastName(user.getLastName());
+            profileResponse.setEmail(user.getEmail());
+            profileResponse.setPhoneNumber(user.getPhoneNumber());
+            profileResponse.setBirthDate(user.getBirthDate());
+            profileResponse.setBirthPlaceCity(user.getBirthPlaceCity());
+            profileResponse.setBirthPlaceCountry(user.getBirthPlaceCountry());
+            profileResponse.setGender(user.getGender());
+            profileResponse.setAddress(user.getAddress());
+            profileResponse.setEnabled(user.isEnabled());
+            profileResponse.setCreatedAt(user.getCreatedAt());
+
+            return ResponseEntity.ok(profileResponse);
+
+        } catch (Exception e) {
+            System.err.println("Error fetching user profile: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "An unexpected error occurred"));
+        }
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateUserProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
+        try {
+            // Find user by current email
+            Optional<User> optionalUser = userRepository.findByEmail(request.getCurrentEmail());
+            
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found"));
+            }
+
+            User user = optionalUser.get();
+
+            // If user wants to change password, verify current password
+            if (request.getCurrentPassword() != null && !request.getCurrentPassword().isEmpty()) {
+                if (user.getPassword() == null || !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(Map.of("message", "Current password is incorrect"));
+                }
+
+                // Update password if new password is provided
+                if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
+                    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+                }
+            }
+
+            // Check if new email is already in use by another user
+            if (!user.getEmail().equals(request.getEmail())) {
+                if (userRepository.existsByEmail(request.getEmail())) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(Map.of("message", "Email is already in use by another account"));
+                }
+            }
+
+            // Update user information
+            user.setFirstName(request.getFirstName());
+            user.setLastName(request.getLastName());
+            user.setEmail(request.getEmail());
+            user.setPhoneNumber(request.getPhoneNumber());
+
+            // Save updated user
+            User updatedUser = userRepository.save(user);
+
+            // Create response
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Profile updated successfully");
+            response.put("user", Map.of(
+                "id", updatedUser.getId(),
+                "firstName", updatedUser.getFirstName(),
+                "lastName", updatedUser.getLastName(),
+                "email", updatedUser.getEmail(),
+                "phoneNumber", updatedUser.getPhoneNumber() != null ? updatedUser.getPhoneNumber() : ""
+            ));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("Error updating user profile: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "An unexpected error occurred while updating profile"));
+        }
+    }
 }

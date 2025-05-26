@@ -14,6 +14,8 @@ import CarListingPage from "./components/CarListingPage";
 import AddCarPage from "./components/AddCarPage";
 import CarDetailsPage from "./components/CarDetailsPage";
 import EndUserLoginPage from "./components/EndUserLogin"; // New import
+import UserProfileViewPage from "./components/ProfileViewPage"; // New import
+import UserProfilePage from "./components/UserProfilePage"; // New import
 import "./App.css";
 
 function App() {
@@ -33,6 +35,9 @@ function App() {
           <Route path="/create-account" element={<CreateAccount />} />
           <Route path="/set-password" element={<SetPassword />} />
           {/* Hesap Silme */}
+          {/* User Profile Routes - New routes */}
+          <Route path="/user-profile" element={<UserProfileViewPage />} />
+          <Route path="/update-profile" element={<UserProfilePage />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
           {/* Araç Yönetimi */}
           <Route path="/cars" element={<CarListingPage />} />
