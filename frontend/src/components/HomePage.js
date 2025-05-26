@@ -38,6 +38,7 @@ function HomePage() {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userName");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("userId"); // FIXED: Also clear userId
 
     // Redirect to home page
     navigate("/home");
@@ -47,14 +48,21 @@ function HomePage() {
   const handleUserLogin = () => navigate("/user-login");
   const handleDeleteAccount = () => navigate("/delete-account");
   const handleCarListing = () => navigate("/cars");
+
   const handleUserProfile = () => {
-    // Get user ID from localStorage (set during login)
+    // FIXED: Better logic for profile navigation
     const userId = localStorage.getItem("userId");
+    const userEmail = localStorage.getItem("userEmail");
+
     if (userId) {
+      // Use ID-based route if available
       navigate(`/user-profile/${userId}`);
-    } else {
-      // Fallback to general profile page
+    } else if (userEmail) {
+      // Fallback to email-based route
       navigate("/user-profile");
+    } else {
+      // No user data found, redirect to login
+      navigate("/user-login");
     }
   };
 

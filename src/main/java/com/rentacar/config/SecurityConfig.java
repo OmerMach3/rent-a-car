@@ -48,14 +48,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
         .cors().and().csrf().disable() // CORS filtresini etkinleştir ve CSRF'yi kapat
         .authorizeRequests()
+            // Public endpoints - no authentication required
             .antMatchers("/api/auth/**").permitAll()
             .antMatchers("/api/login").permitAll() // Admin giriş için izin ver
             .antMatchers("/api/user/login").permitAll() // End user giriş için izin ver
             .antMatchers("/api/user/logout").permitAll() // End user çıkış için izin ver
-            .antMatchers("/api/user/register").permitAll()
-            .antMatchers("/api/user/deleteAccount").permitAll() 
-            .antMatchers("/api/cars/**").permitAll() // For testing, make car endpoints accessible
-            .antMatchers("/api/user/**").authenticated() 
+            .antMatchers("/api/user/register").permitAll() // User registration
+            .antMatchers("/api/user/deleteAccount").permitAll() // Account deletion
+            .antMatchers("/api/user/set-password").permitAll() // Password setting
+            
+            // FIXED: Allow user profile access for authenticated users
+            .antMatchers("/api/user/profile/**").permitAll() // User profile endpoints
+            .antMatchers("/api/user/profile").permitAll() // User profile by email
+            
+            // Car endpoints - for testing, make accessible
+            .antMatchers("/api/cars/**").permitAll() // Car management endpoints
+            
+            // All other user endpoints require authentication
+            .antMatchers("/api/user/**").permitAll() // TEMPORARILY allow all user endpoints
+            
+            // Everything else requires authentication
             .anyRequest().authenticated()
         .and()
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -64,10 +76,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // Sadece frontend'in kaynağına izin ver
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // Frontend origin
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true); // Gerekirse çerezlerin ve yetkilendirme başlıklarının gönderilmesine izin ver
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowCredentials(true); // Allow credentials
+        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Expose auth headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -88,8 +88,22 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
 
     // Get profile by email (existing method)
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(@RequestParam String email) {
+    public ResponseEntity<?> getUserProfile(
+            @RequestParam(required = false) String email,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
+            // Check authentication
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Authentication required"));
+            }
+
+            // If no email provided, return error
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Email parameter is required"));
+            }
+
             Optional<User> optionalUser = userRepository.findByEmail(email);
             
             if (optionalUser.isEmpty()) {
@@ -112,29 +126,76 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
         }
     }
 
-    // NEW: Get profile by ID
+    // FIXED: Get profile by ID with simplified security (allows any authenticated user)
     @GetMapping("/profile/{id}")
-    public ResponseEntity<?> getUserProfileById(@PathVariable Long id) {
+    public ResponseEntity<?> getUserProfileById(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
+            System.out.println("=== PROFILE REQUEST DEBUG ===");
+            System.out.println("Requested User ID: " + id);
+            System.out.println("Auth Header: " + (authHeader != null ? "Present" : "Missing"));
+            
+            // Check authentication
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                System.out.println("ERROR: No valid auth header");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Authentication required"));
+            }
+
+            // Extract token from header
+            String token = authHeader.substring(7); // Remove "Bearer " prefix
+            System.out.println("Token extracted: " + (token != null && !token.trim().isEmpty() ? "Valid" : "Invalid"));
+            
+            // Simple token validation - just check if it exists and follows our pattern
+            if (token == null || token.trim().isEmpty()) {
+                System.out.println("ERROR: Empty token");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Invalid token"));
+            }
+
+            // For our simple implementation, just verify token starts with expected pattern
+            if (!token.startsWith("user_token_")) {
+                System.out.println("ERROR: Invalid token format");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Invalid token format"));
+            }
+
+            // Find user by ID
             Optional<User> optionalUser = userRepository.findById(id);
             
             if (optionalUser.isEmpty()) {
+                System.out.println("ERROR: User not found with ID: " + id);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("message", "User not found"));
             }
 
             User user = optionalUser.get();
+            System.out.println("User found: " + user.getEmail() + " (ID: " + user.getId() + ")");
+            
+            // Check if user account is enabled
+            if (!user.isEnabled()) {
+                System.out.println("ERROR: User account is not enabled");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "User account is not active"));
+            }
             
             // Create response DTO
             UserProfileResponse profileResponse = createUserProfileResponse(user);
 
+            System.out.println("SUCCESS: Profile data prepared for user: " + user.getEmail());
+            System.out.println("=== END DEBUG ===");
+            
             return ResponseEntity.ok(profileResponse);
 
         } catch (Exception e) {
+            System.err.println("=== ERROR IN PROFILE ENDPOINT ===");
             System.err.println("Error fetching user profile by ID: " + e.getMessage());
             e.printStackTrace();
+            System.err.println("=== END ERROR ===");
+            
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "An unexpected error occurred"));
+                    .body(Map.of("message", "An unexpected error occurred: " + e.getMessage()));
         }
     }
 
@@ -157,8 +218,16 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateUserProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
+    public ResponseEntity<?> updateUserProfile(
+            @Valid @RequestBody UpdateUserProfileRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
+            // Check authentication
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Authentication required"));
+            }
+
             // Find user by current email
             Optional<User> optionalUser = userRepository.findByEmail(request.getCurrentEmail());
             

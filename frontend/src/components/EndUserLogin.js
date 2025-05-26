@@ -42,11 +42,12 @@ function EndUserLoginPage() {
       if (response.ok) {
         const data = await response.json();
 
-        // Store user data in localStorage
+        // Store user data in localStorage - FIX: Added userId storage
         localStorage.setItem("userToken", data.token);
         localStorage.setItem("userEmail", data.email);
         localStorage.setItem("userName", data.firstName + " " + data.lastName);
         localStorage.setItem("userRole", "END_USER");
+        localStorage.setItem("userId", data.userId); // FIXED: This was missing!
 
         // Redirect to home page
         navigate("/home");
@@ -69,7 +70,7 @@ function EndUserLoginPage() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>End User Login</h2>
+        <h2>User Login</h2>
 
         <form onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}

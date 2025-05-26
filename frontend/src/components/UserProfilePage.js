@@ -263,7 +263,7 @@ function UserProfilePage() {
             ← Back to Profile
           </button>
           <button className="home-button" onClick={handleBackToHome}>
-            🏠 Home
+            Home
           </button>
         </div>
       </div>
