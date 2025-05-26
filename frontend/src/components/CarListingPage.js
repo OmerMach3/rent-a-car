@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
-import "./CarDetailsPage.css";
+import { useNavigate } from "react-router-dom";
+import "./CarListingPage.css";
 
-const CarDetailsPage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [car, setCar] = useState(null);
+function CarListingPage() {
+  const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Silme işlemi için state'ler
+  const [selectedCar, setSelectedCar] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -26,29 +26,27 @@ const CarDetailsPage = () => {
       return;
     }
 
-    // Fetch car details
-    const fetchCarDetails = async () => {
+    // Fetch car list from API
+    const fetchCars = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `http://localhost:8081/api/cars/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCar(response.data);
+        const response = await axios.get("http://localhost:8081/api/cars", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Fetched cars:", response.data);
+        setCars(response.data);
         setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch car details:", err);
-        setError("Failed to load car details. Please try again later.");
+        console.error("Failed to fetch cars:", err);
+        setError("Failed to load cars. Please try again later.");
         setLoading(false);
       }
     };
 
-    fetchCarDetails();
-  }, [id, navigate]);
+    fetchCars();
+  }, [navigate]);
 
   // Helper function to format date
   const formatDate = (dateString) => {
@@ -57,16 +55,9 @@ const CarDetailsPage = () => {
     return date.toLocaleDateString();
   };
 
-  const handleEditClick = () => {
-    navigate(`/edit-car/${id}`);
-  };
-
-  const handleBackClick = () => {
-    navigate("/cars");
-  };
-
   // Silme modalını göster
-  const handleDeleteClick = () => {
+  const handleDeleteClick = (car) => {
+    setSelectedCar(car);
     setShowDeleteModal(true);
     setDeleteError("");
     setDeleteSuccess("");
@@ -75,6 +66,8 @@ const CarDetailsPage = () => {
   // Silme modalını kapat
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
+    setSelectedCar(null);
+    setDeleteError("");
   };
 
   // Silme işlemini gerçekleştir
@@ -85,7 +78,7 @@ const CarDetailsPage = () => {
 
       const token = localStorage.getItem("token");
       const response = await axios.delete(
-        `http://localhost:8081/api/cars/${id}`,
+        `http://localhost:8081/api/cars/${selectedCar.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,9 +89,14 @@ const CarDetailsPage = () => {
       setDeleteLoading(false);
       setDeleteSuccess("Car successfully deleted");
 
-      // 2 saniye bekle ve araçlar listesine geri dön
+      // Araba listesini güncelle
+      setCars(cars.filter((car) => car.id !== selectedCar.id));
+
+      // 2 saniye bekle ve modal'ı kapat
       setTimeout(() => {
-        navigate("/cars");
+        setShowDeleteModal(false);
+        setSelectedCar(null);
+        setDeleteSuccess("");
       }, 2000);
     } catch (err) {
       setDeleteLoading(false);
@@ -128,153 +126,97 @@ const CarDetailsPage = () => {
     }
   };
 
-  if (loading) {
-    return <div className="car-details-loading">Loading car details...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="car-details-error">
-        <p>{error}</p>
-        <button onClick={handleBackClick}>Back to Car List</button>
-      </div>
-    );
-  }
-
-  if (!car) {
-    return (
-      <div className="car-details-not-found">
-        <p>Car not found.</p>
-        <button onClick={handleBackClick}>Back to Car List</button>
-      </div>
-    );
-  }
-
   return (
-    <div className="car-details-container">
-      <div className="car-details-header">
-        <h2>Car Details</h2>
-        <div className="car-details-actions">
-          <button className="edit-car-button" onClick={handleEditClick}>
-            Edit Car
-          </button>
-          <button className="delete-car-button" onClick={handleDeleteClick}>
-            Delete Car
-          </button>
-          <button className="back-button" onClick={handleBackClick}>
-            Back to List
-          </button>
-        </div>
+    <div className="car-listing-container">
+      <div className="car-listing-header">
+        <h2>Car Listing</h2>
+        <button className="add-car-button" onClick={() => navigate("/add-car")}>
+          Add New Car
+        </button>
       </div>
 
-      <div className="car-details-content">
-        <div className="car-details-main">
-          <div className="car-image-placeholder">
-            <span>Car Image Not Available</span>
-          </div>
+      {error && <div className="error-message">{error}</div>}
 
-          <div className="car-info-primary">
-            <h3>
-              {car.year} {car.make} {car.model}
-            </h3>
-            <div className="car-status">
-              <span className={`status-badge ${car.status.toLowerCase()}`}>
-                {car.status}
-              </span>
+      {loading ? (
+        <div className="loading-message">Loading cars...</div>
+      ) : (
+        <>
+          {cars.length === 0 ? (
+            <div className="no-cars-message">
+              No cars found. Click "Add New Car" to create a new car record.
             </div>
-            <p className="car-price">${car.dailyRate.toFixed(2)} / day</p>
-            <p className="car-description">
-              {car.description || "No description available."}
-            </p>
-          </div>
-        </div>
+          ) : (
+            <div className="car-table-container">
+              <table className="car-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Make</th>
+                    <th>Model</th>
+                    <th>Year</th>
+                    <th>License Plate</th>
+                    <th>Status</th>
+                    <th>Daily Rate</th>
+                    <th>Last Maintenance</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cars.map((car) => (
+                    <tr key={car.id}>
+                      <td>{car.id}</td>
+                      <td>{car.make}</td>
+                      <td>{car.model}</td>
+                      <td>{car.year}</td>
+                      <td>{car.licensePlate}</td>
+                      <td>
+                        <span
+                          className={`status-badge ${car.status.toLowerCase()}`}
+                        >
+                          {car.status}
+                        </span>
+                      </td>
+                      <td>${car.dailyRate.toFixed(2)}</td>
+                      <td>{formatDate(car.lastMaintenanceDate)}</td>
+                      <td className="action-buttons">
+                        <button
+                          className="edit-button"
+                          onClick={() => navigate(`/edit-car/${car.id}`)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="details-button"
+                          onClick={() => navigate(`/car-details/${car.id}`)}
+                        >
+                          Details
+                        </button>
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDeleteClick(car)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
 
-        <div className="car-details-grid">
-          <div className="detail-section">
-            <h4>Basic Information</h4>
-            <div className="detail-item">
-              <span className="detail-label">ID:</span>
-              <span className="detail-value">{car.id}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">License Plate:</span>
-              <span className="detail-value">{car.licensePlate}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">VIN:</span>
-              <span className="detail-value">{car.vinNumber || "N/A"}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Color:</span>
-              <span className="detail-value">{car.color || "N/A"}</span>
-            </div>
-          </div>
-
-          <div className="detail-section">
-            <h4>Technical Details</h4>
-            <div className="detail-item">
-              <span className="detail-label">Category:</span>
-              <span className="detail-value">{car.category}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Transmission:</span>
-              <span className="detail-value">{car.transmission}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Fuel Type:</span>
-              <span className="detail-value">{car.fuelType || "N/A"}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Mileage:</span>
-              <span className="detail-value">
-                {car.mileage ? `${car.mileage} km` : "N/A"}
-              </span>
-            </div>
-          </div>
-
-          <div className="detail-section">
-            <h4>Maintenance</h4>
-            <div className="detail-item">
-              <span className="detail-label">Last Maintenance:</span>
-              <span className="detail-value">
-                {formatDate(car.lastMaintenanceDate)}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Next Maintenance Due:</span>
-              <span className="detail-value">
-                {formatDate(car.nextMaintenanceDate)}
-              </span>
-            </div>
-          </div>
-
-          <div className="detail-section">
-            <h4>Features</h4>
-            {car.features && car.features.length > 0 ? (
-              <div className="features-list">
-                {car.features.map((feature, index) => (
-                  <div key={index} className="feature-item">
-                    <span className="feature-check">✓</span>
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No features listed</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Silme onay modalı */}
+      {/* Silme Onay Modalı */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Confirm Deletion</h3>
             <p>
-              Are you sure you want to delete {car.year} {car.make} {car.model}{" "}
-              ({car.licensePlate})?
-              {car.status === "RENTED" && (
+              Are you sure you want to delete {selectedCar.year}{" "}
+              {selectedCar.make} {selectedCar.model} ({selectedCar.licensePlate}
+              )?
+              {selectedCar.status === "RENTED" && (
                 <span className="warning-text">
                   Warning: This car is currently rented and cannot be deleted.
                 </span>
@@ -298,7 +240,9 @@ const CarDetailsPage = () => {
                 className="confirm-delete-button"
                 onClick={handleConfirmDelete}
                 disabled={
-                  deleteLoading || deleteSuccess || car.status === "RENTED"
+                  deleteLoading ||
+                  deleteSuccess ||
+                  selectedCar.status === "RENTED"
                 }
               >
                 {deleteLoading ? "Deleting..." : "Delete"}
@@ -309,6 +253,6 @@ const CarDetailsPage = () => {
       )}
     </div>
   );
-};
+}
 
-export default CarDetailsPage;
+export default CarListingPage;

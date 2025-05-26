@@ -78,16 +78,7 @@ function HomePage() {
               <p>View, add, edit and manage your car inventory</p>
             </div>
 
-            {/* Additional admin actions can be added here */}
-            <div className="action-card" style={actionCardStyle}>
-              <h3>Rental Management</h3>
-              <p>Manage customer rentals and reservations</p>
-            </div>
-
-            <div className="action-card" style={actionCardStyle}>
-              <h3>Customer Management</h3>
-              <p>View and manage customer accounts</p>
-            </div>
+            {/* Diğer kartlar kaldırıldı */}
           </div>
         )}
       </div>

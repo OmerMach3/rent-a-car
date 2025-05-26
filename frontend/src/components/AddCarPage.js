@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./AddCarPage.css";
 
 const AddCarPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get car ID from URL params for edit mode
+  const isEditMode = !!id; // Check if we're in edit mode
+
   const [formData, setFormData] = useState({
     make: "",
     model: "",
@@ -20,11 +23,13 @@ const AddCarPage = () => {
     status: "AVAILABLE",
     features: [],
     description: "",
+    lastMaintenanceDate: "", // Added this field
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [fetchingCar, setFetchingCar] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated as admin
@@ -33,8 +38,59 @@ const AddCarPage = () => {
 
     if (!token || role !== "SYSTEM_ADMIN") {
       navigate("/login");
+      return;
     }
-  }, [navigate]);
+
+    // If in edit mode, fetch the car data
+    if (isEditMode) {
+      fetchCarData();
+    }
+  }, [navigate, isEditMode, id]);
+
+  const fetchCarData = async () => {
+    try {
+      setFetchingCar(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`http://localhost:8081/api/cars/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const carData = response.data;
+
+      // Format the date if it exists
+      const formattedDate = carData.lastMaintenanceDate
+        ? new Date(carData.lastMaintenanceDate).toISOString().split("T")[0]
+        : "";
+
+      setFormData({
+        make: carData.make || "",
+        model: carData.model || "",
+        year: carData.year || "",
+        color: carData.color || "",
+        licensePlate: carData.licensePlate || "",
+        vinNumber: carData.vinNumber || "",
+        mileage: carData.mileage || "",
+        fuelType: carData.fuelType || "",
+        transmission: carData.transmission || "AUTOMATIC",
+        category: carData.category || "ECONOMY",
+        dailyRate: carData.dailyRate || "",
+        status: carData.status || "AVAILABLE",
+        features: carData.features || [],
+        description: carData.description || "",
+        lastMaintenanceDate: formattedDate,
+      });
+
+      setFetchingCar(false);
+    } catch (error) {
+      console.error("Failed to fetch car data:", error);
+      setErrors({
+        submit: "Failed to load car data. Please try again.",
+      });
+      setFetchingCar(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,66 +116,77 @@ const AddCarPage = () => {
   };
 
   const validate = () => {
-    // frontend/src/components/AddCarPage.js
+    const newErrors = {};
 
-    // Form doğrulama mantığını geliştirelim
-    const validate = () => {
-      const newErrors = {};
+    // Required fields
+    if (!formData.make) newErrors.make = "Make is required";
+    if (!formData.model) newErrors.model = "Model is required";
+    if (!formData.year) newErrors.year = "Year is required";
+    if (!formData.licensePlate)
+      newErrors.licensePlate = "License plate is required";
+    if (!formData.dailyRate) newErrors.dailyRate = "Daily rate is required";
 
-      // Zorunlu alanlar
-      if (!formData.make) newErrors.make = "Make is required";
-      if (!formData.model) newErrors.model = "Model is required";
-      if (!formData.year) newErrors.year = "Year is required";
-      if (!formData.licensePlate)
-        newErrors.licensePlate = "License plate is required";
-      if (!formData.dailyRate) newErrors.dailyRate = "Daily rate is required";
+    // Year validation
+    const currentYear = new Date().getFullYear() + 1;
+    if (
+      formData.year &&
+      (isNaN(formData.year) ||
+        formData.year < 1900 ||
+        formData.year > currentYear)
+    ) {
+      newErrors.year = `Year must be between 1900 and ${currentYear}`;
+    }
 
-      // Yıl geçerli aralıkta mı?
-      const currentYear = new Date().getFullYear() + 1; // Gelecek yıl modelleri için +1
-      if (
-        formData.year &&
-        (isNaN(formData.year) ||
-          formData.year < 1900 ||
-          formData.year > currentYear)
-      ) {
-        newErrors.year = `Year must be between 1900 and ${currentYear}`;
+    // Daily rate validation
+    if (
+      formData.dailyRate &&
+      (isNaN(formData.dailyRate) || parseFloat(formData.dailyRate) <= 0)
+    ) {
+      newErrors.dailyRate = "Daily rate must be a positive number";
+    }
+
+    // License plate validation
+    if (
+      formData.licensePlate &&
+      !/^[A-Z0-9-]{2,10}$/.test(formData.licensePlate)
+    ) {
+      newErrors.licensePlate = "Invalid license plate format";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validate()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      // Prepare data for submission
+      const submitData = { ...formData };
+
+      // Convert lastMaintenanceDate to proper format if provided
+      if (submitData.lastMaintenanceDate) {
+        submitData.lastMaintenanceDate = new Date(
+          submitData.lastMaintenanceDate
+        ).toISOString();
+      } else {
+        delete submitData.lastMaintenanceDate; // Don't send empty date
       }
 
-      // Günlük ücret pozitif mi?
-      if (
-        formData.dailyRate &&
-        (isNaN(formData.dailyRate) || parseFloat(formData.dailyRate) <= 0)
-      ) {
-        newErrors.dailyRate = "Daily rate must be a positive number";
-      }
-
-      // Plaka formatı kontrolü (isteğe bağlı - her ülkenin farklı formatı olabilir)
-      if (
-        formData.licensePlate &&
-        !/^[A-Z0-9-]{2,10}$/.test(formData.licensePlate)
-      ) {
-        newErrors.licensePlate = "Invalid license plate format";
-      }
-
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    };
-
-    // Form gönderimini geliştirelim
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-
-      if (!validate()) {
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.post(
-          "http://localhost:8081/api/cars",
-          formData,
+      let response;
+      if (isEditMode) {
+        // Update existing car
+        response = await axios.put(
+          `http://localhost:8081/api/cars/${id}`,
+          submitData,
           {
             headers: {
               "Content-Type": "application/json",
@@ -127,12 +194,25 @@ const AddCarPage = () => {
             },
           }
         );
+      } else {
+        // Create new car
+        response = await axios.post(
+          "http://localhost:8081/api/cars",
+          submitData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
 
-        // Başarılı geri bildirim
-        setSuccess(true);
-        setLoading(false);
+      setSuccess(true);
+      setLoading(false);
 
-        // Form verilerini sıfırla (isteğe bağlı)
+      // Reset form if adding new car
+      if (!isEditMode) {
         setFormData({
           make: "",
           model: "",
@@ -148,53 +228,9 @@ const AddCarPage = () => {
           status: "AVAILABLE",
           features: [],
           description: "",
+          lastMaintenanceDate: "",
         });
-
-        // Mesaj gösterildikten sonra yönlendirme
-        setTimeout(() => {
-          navigate("/cars");
-        }, 2000);
-      } catch (error) {
-        setLoading(false);
-
-        // Sunucudan gelen hata mesajlarını göster
-        if (error.response && error.response.data) {
-          if (error.response.data.message) {
-            setErrors({
-              submit: error.response.data.message,
-            });
-          } else {
-            setErrors({
-              submit: "Failed to add car. Please try again.",
-            });
-          }
-        } else {
-          setErrors({ submit: "An error occurred while adding the car." });
-        }
       }
-    };
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post("http://localhost:8081/api/cars", formData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setSuccess(true);
-      setLoading(false);
 
       // Redirect to car listing page after 2 seconds
       setTimeout(() => {
@@ -202,14 +238,25 @@ const AddCarPage = () => {
       }, 2000);
     } catch (error) {
       setLoading(false);
+
       if (error.response && error.response.data) {
-        setErrors({
-          submit:
-            error.response.data.message ||
-            "Failed to add car. Please try again.",
-        });
+        if (error.response.data.message) {
+          setErrors({
+            submit: error.response.data.message,
+          });
+        } else {
+          setErrors({
+            submit: `Failed to ${
+              isEditMode ? "update" : "add"
+            } car. Please try again.`,
+          });
+        }
       } else {
-        setErrors({ submit: "An error occurred while adding the car." });
+        setErrors({
+          submit: `An error occurred while ${
+            isEditMode ? "updating" : "adding"
+          } the car.`,
+        });
       }
     }
   };
@@ -218,12 +265,24 @@ const AddCarPage = () => {
     navigate("/cars");
   };
 
+  if (fetchingCar) {
+    return (
+      <div className="add-car-container">
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          Loading car data...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="add-car-container">
-      <h2>Add New Car</h2>
+      <h2>{isEditMode ? "Edit Car" : "Add New Car"}</h2>
 
       {success && (
-        <div className="success-message">Car has been successfully added!</div>
+        <div className="success-message">
+          Car has been successfully {isEditMode ? "updated" : "added"}!
+        </div>
       )}
 
       {errors.submit && <div className="error-message">{errors.submit}</div>}
@@ -310,6 +369,17 @@ const AddCarPage = () => {
                 onChange={handleChange}
               />
             </div>
+
+            <div className="form-group">
+              <label htmlFor="lastMaintenanceDate">Last Maintenance Date</label>
+              <input
+                type="date"
+                id="lastMaintenanceDate"
+                name="lastMaintenanceDate"
+                value={formData.lastMaintenanceDate}
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
           <div className="form-column">
@@ -333,6 +403,7 @@ const AddCarPage = () => {
                 value={formData.fuelType}
                 onChange={handleChange}
               >
+                <option value="">Select Fuel Type</option>
                 <option value="GASOLINE">Gasoline</option>
                 <option value="DIESEL">Diesel</option>
                 <option value="ELECTRIC">Electric</option>
@@ -448,7 +519,13 @@ const AddCarPage = () => {
             Cancel
           </button>
           <button type="submit" className="submit-button" disabled={loading}>
-            {loading ? "Adding..." : "Add Car"}
+            {loading
+              ? isEditMode
+                ? "Updating..."
+                : "Adding..."
+              : isEditMode
+              ? "Update Car"
+              : "Add Car"}
           </button>
         </div>
       </form>
