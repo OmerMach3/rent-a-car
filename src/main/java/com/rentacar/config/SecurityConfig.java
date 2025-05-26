@@ -49,7 +49,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .cors().and().csrf().disable() // CORS filtresini etkinleştir ve CSRF'yi kapat
         .authorizeRequests()
             .antMatchers("/api/auth/**").permitAll()
-            .antMatchers("/api/login").permitAll() // Giriş için izin ver
+            .antMatchers("/api/login").permitAll() // Admin giriş için izin ver
+            .antMatchers("/api/user/login").permitAll() // End user giriş için izin ver
+            .antMatchers("/api/user/logout").permitAll() // End user çıkış için izin ver
             .antMatchers("/api/user/register").permitAll()
             .antMatchers("/api/user/deleteAccount").permitAll() 
             .antMatchers("/api/cars/**").permitAll() // For testing, make car endpoints accessible

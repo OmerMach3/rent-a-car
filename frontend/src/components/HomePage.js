@@ -5,16 +5,44 @@ import "./HomePage.css";
 
 function HomePage() {
   const navigate = useNavigate();
+
+  // Admin authentication data
   const username = localStorage.getItem("username");
   const role = localStorage.getItem("role");
 
+  // End user authentication data
+  const userName = localStorage.getItem("userName");
+  const userRole = localStorage.getItem("userRole");
+  const userToken = localStorage.getItem("userToken");
+
+  // Check if any user is authenticated (admin or end user)
+  const isAdminAuthenticated = isAuthenticated();
+  const isEndUserAuthenticated = !!userToken;
+  const isAnyUserAuthenticated = isAdminAuthenticated || isEndUserAuthenticated;
+
+  // Determine display name and current role
+  const displayName = username || userName || "User";
+  const currentRole = role || userRole;
+
+  // Navigation handlers
   const handleLogin = () => navigate("/login");
+
   const handleLogout = () => {
+    // Clear admin tokens
     localStorage.removeItem("token");
     localStorage.removeItem("username");
     localStorage.removeItem("role");
+
+    // Clear end user tokens
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userRole");
+
+    // Redirect to home page
     navigate("/home");
   };
+
   const handleCreateAccount = () => navigate("/create-account");
   const handleUserLogin = () => navigate("/user-login");
   const handleDeleteAccount = () => navigate("/delete-account");
@@ -23,13 +51,12 @@ function HomePage() {
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1 style={{ fontSize: "36px", fontWeight: "bold" }}>
-          Rent-A-Car Management System
-        </h1>
+        <h1 style={{ fontSize: "36px", fontWeight: "bold" }}>Rent-A-Car</h1>
 
-        {/* Sağ üst köşedeki butonlar */}
+        {/* Right side navigation buttons */}
         <div style={buttonContainerStyle}>
-          {!isAuthenticated() ? (
+          {!isAnyUserAuthenticated ? (
+            // Show login/signup options when no user is authenticated
             <>
               <button onClick={handleLogin} style={topButtonStyle}>
                 Admin Login
@@ -45,14 +72,42 @@ function HomePage() {
               </button>
             </>
           ) : (
+            // Show user info and logout when authenticated
             <>
-              <p style={{ fontSize: "20px" }}>Welcome, {username}!</p>
+              <div style={{ textAlign: "right", marginBottom: "10px" }}>
+                <p style={{ fontSize: "20px", margin: "0" }}>
+                  Welcome, {displayName}!
+                </p>
+                {currentRole === "END_USER" && (
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "#6c757d",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    End User Account
+                  </span>
+                )}
+                {currentRole === "SYSTEM_ADMIN" && (
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "#6c757d",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    System Administrator
+                  </span>
+                )}
+              </div>
+
               <button onClick={handleLogout} style={topButtonStyle}>
                 Log Out
               </button>
 
               {/* Only show car management button for admin users */}
-              {role === "SYSTEM_ADMIN" && (
+              {currentRole === "SYSTEM_ADMIN" && (
                 <button onClick={handleCarListing} style={topButtonStyle}>
                   Car Management
                 </button>
@@ -62,12 +117,13 @@ function HomePage() {
         </div>
       </header>
 
-      {/* Main content with call-to-action buttons */}
+      {/* Main content area */}
       <div className="main-content" style={mainContentStyle}>
         <h2>Manage Your Car Fleet Efficiently</h2>
-        <p>Welcome to the Rent-A-Car Management System.</p>
+        <p>Welcome to the Rent-A-Car</p>
 
-        {isAuthenticated() && role === "SYSTEM_ADMIN" && (
+        {/* Admin-specific content */}
+        {currentRole === "SYSTEM_ADMIN" && (
           <div className="admin-actions" style={adminActionsStyle}>
             <div
               className="action-card"
@@ -78,7 +134,104 @@ function HomePage() {
               <p>View, add, edit and manage your car inventory</p>
             </div>
 
-            {/* Diğer kartlar kaldırıldı */}
+            <div className="action-card" style={actionCardStyle}>
+              <h3>Rental Management</h3>
+              <p>Track active rentals and manage customer bookings</p>
+            </div>
+
+            <div className="action-card" style={actionCardStyle}>
+              <h3>Reports & Analytics</h3>
+              <p>View business insights and performance metrics</p>
+            </div>
+          </div>
+        )}
+
+        {/* End user-specific content */}
+        {currentRole === "END_USER" && (
+          <div className="user-actions" style={adminActionsStyle}>
+            <div className="action-card" style={actionCardStyle}>
+              <h3>Browse Available Cars</h3>
+              <p>Explore our fleet and find the perfect car for your needs</p>
+            </div>
+
+            <div className="action-card" style={actionCardStyle}>
+              <h3>My Reservations</h3>
+              <p>View and manage your current and past reservations</p>
+            </div>
+
+            <div className="action-card" style={actionCardStyle}>
+              <h3>Profile Settings</h3>
+              <p>Update your personal information and preferences</p>
+            </div>
+          </div>
+        )}
+
+        {/* Content for non-authenticated users */}
+        {!isAnyUserAuthenticated && (
+          <div className="welcome-actions" style={adminActionsStyle}>
+            <div
+              className="action-card"
+              style={actionCardStyle}
+              onClick={handleCreateAccount}
+            >
+              <h3>Get Started</h3>
+              <p>
+                Create an account to start renting cars from our premium fleet
+              </p>
+            </div>
+
+            <div
+              className="action-card"
+              style={actionCardStyle}
+              onClick={handleUserLogin}
+            >
+              <h3>Already Have an Account?</h3>
+              <p>Sign in to access your dashboard and manage reservations</p>
+            </div>
+
+            <div className="action-card" style={actionCardStyle}>
+              <h3>Why Choose Us?</h3>
+              <p>
+                Premium vehicles, competitive rates, and excellent customer
+                service
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Additional information section */}
+        {!isAnyUserAuthenticated && (
+          <div style={{ marginTop: "60px", textAlign: "center" }}>
+            <h3 style={{ color: "#333", marginBottom: "20px" }}>
+              Featured Services
+            </h3>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "40px",
+                flexWrap: "wrap",
+                maxWidth: "800px",
+                margin: "0 auto",
+              }}
+            >
+              <div style={featureStyle}>
+                <h4>🚗 Wide Selection</h4>
+                <p>Economy to luxury vehicles</p>
+              </div>
+              <div style={featureStyle}>
+                <h4>📱 Easy Booking</h4>
+                <p>Book online in minutes</p>
+              </div>
+              <div style={featureStyle}>
+                <h4>🔧 Well Maintained</h4>
+                <p>Regular maintenance & safety checks</p>
+              </div>
+              <div style={featureStyle}>
+                <h4>🕒 24/7 Support</h4>
+                <p>Round-the-clock customer service</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -86,8 +239,7 @@ function HomePage() {
   );
 }
 
-// 🔧 Stil tanımları
-
+// Style definitions
 const buttonContainerStyle = {
   position: "absolute",
   top: "20px",
@@ -107,6 +259,8 @@ const topButtonStyle = {
   cursor: "pointer",
   color: "rgba(38, 128, 170, 0.95)",
   transition: "color 0.3s ease, transform 0.3s ease",
+  padding: "5px 10px",
+  borderRadius: "4px",
 };
 
 const mainContentStyle = {
@@ -132,6 +286,26 @@ const actionCardStyle = {
   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
   cursor: "pointer",
   transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  textAlign: "left",
 };
+
+const featureStyle = {
+  textAlign: "center",
+  padding: "20px",
+  minWidth: "150px",
+};
+
+// Add hover effects via CSS-in-JS
+const styleElement = document.createElement("style");
+styleElement.textContent = `
+  .action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  }
+`;
+if (!document.head.querySelector("style[data-homepage]")) {
+  styleElement.setAttribute("data-homepage", "true");
+  document.head.appendChild(styleElement);
+}
 
 export default HomePage;

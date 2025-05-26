@@ -13,6 +13,7 @@ import SetPassword from "./components/SetPassword";
 import CarListingPage from "./components/CarListingPage";
 import AddCarPage from "./components/AddCarPage";
 import CarDetailsPage from "./components/CarDetailsPage";
+import EndUserLoginPage from "./components/EndUserLogin"; // New import
 import "./App.css";
 
 function App() {
@@ -22,20 +23,17 @@ function App() {
         <Routes>
           {/* Ana Sayfaya Yönlendirme */}
           <Route path="/" element={<Navigate to="/home" />} />
-
-          {/* Giriş Sayfası */}
+          {/* Giriş Sayfaları */}
           <Route path="/login" element={<LoginPage />} />
-
+          <Route path="/user-login" element={<EndUserLoginPage />} />{" "}
+          {/* New route */}
           {/* Ana Sayfa */}
           <Route path="/home" element={<HomePage />} />
-
           {/* Hesap Oluşturma */}
           <Route path="/create-account" element={<CreateAccount />} />
           <Route path="/set-password" element={<SetPassword />} />
-
           {/* Hesap Silme */}
           <Route path="/delete-account" element={<DeleteAccount />} />
-
           {/* Araç Yönetimi */}
           <Route path="/cars" element={<CarListingPage />} />
           <Route path="/add-car" element={<AddCarPage />} />
