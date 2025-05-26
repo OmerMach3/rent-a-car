@@ -47,7 +47,16 @@ function HomePage() {
   const handleUserLogin = () => navigate("/user-login");
   const handleDeleteAccount = () => navigate("/delete-account");
   const handleCarListing = () => navigate("/cars");
-  const handleUserProfile = () => navigate("/user-profile"); // New handler
+  const handleUserProfile = () => {
+    // Get user ID from localStorage (set during login)
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      navigate(`/user-profile/${userId}`);
+    } else {
+      // Fallback to general profile page
+      navigate("/user-profile");
+    }
+  };
 
   return (
     <div className="home-container">
@@ -107,6 +116,13 @@ function HomePage() {
                 Log Out
               </button>
 
+              {/* Show profile button for end users */}
+              {currentRole === "END_USER" && (
+                <button onClick={handleUserProfile} style={topButtonStyle}>
+                  My Profile
+                </button>
+              )}
+
               {/* Only show car management button for admin users */}
               {currentRole === "SYSTEM_ADMIN" && (
                 <button onClick={handleCarListing} style={topButtonStyle}>
@@ -160,7 +176,11 @@ function HomePage() {
               <p>View and manage your current and past reservations</p>
             </div>
 
-            <div className="action-card" style={actionCardStyle}>
+            <div
+              className="action-card"
+              style={actionCardStyle}
+              onClick={handleUserProfile}
+            >
               <h3>Profile Settings</h3>
               <p>Update your personal information and preferences</p>
             </div>

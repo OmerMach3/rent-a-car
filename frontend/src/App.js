@@ -13,9 +13,9 @@ import SetPassword from "./components/SetPassword";
 import CarListingPage from "./components/CarListingPage";
 import AddCarPage from "./components/AddCarPage";
 import CarDetailsPage from "./components/CarDetailsPage";
-import EndUserLoginPage from "./components/EndUserLogin"; // New import
-import UserProfileViewPage from "./components/ProfileViewPage"; // New import
-import UserProfilePage from "./components/UserProfilePage"; // New import
+import EndUserLoginPage from "./components/EndUserLogin";
+import UserProfileViewPage from "./components/ProfileViewPage";
+import UserProfilePage from "./components/UserProfilePage";
 import "./App.css";
 
 function App() {
@@ -27,18 +27,19 @@ function App() {
           <Route path="/" element={<Navigate to="/home" />} />
           {/* Giriş Sayfaları */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/user-login" element={<EndUserLoginPage />} />{" "}
-          {/* New route */}
+          <Route path="/user-login" element={<EndUserLoginPage />} />
           {/* Ana Sayfa */}
           <Route path="/home" element={<HomePage />} />
           {/* Hesap Oluşturma */}
           <Route path="/create-account" element={<CreateAccount />} />
           <Route path="/set-password" element={<SetPassword />} />
           {/* Hesap Silme */}
-          {/* User Profile Routes - New routes */}
-          <Route path="/user-profile" element={<UserProfileViewPage />} />
-          <Route path="/update-profile" element={<UserProfilePage />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
+          {/* User Profile Routes - Updated with ID support */}
+          <Route path="/user-profile" element={<UserProfileViewPage />} />
+          <Route path="/user-profile/:id" element={<UserProfileViewPage />} />
+          <Route path="/update-profile" element={<UserProfilePage />} />
+          <Route path="/update-profile/:id" element={<UserProfilePage />} />
           {/* Araç Yönetimi */}
           <Route path="/cars" element={<CarListingPage />} />
           <Route path="/add-car" element={<AddCarPage />} />

@@ -113,6 +113,12 @@ function EndUserLoginPage() {
               Create Account
             </span>
           </p>
+          <p className="create-account-link">
+            Want to view your profile?{" "}
+            <span onClick={() => navigate("/user-profile")} className="link">
+              View Profile
+            </span>
+          </p>
         </div>
       </div>
     </div>

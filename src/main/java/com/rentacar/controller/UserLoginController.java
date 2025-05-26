@@ -69,15 +69,15 @@ public class UserLoginController {
                         .body(Map.of("message", "Invalid email or password"));
             }
 
-            // Create response with user data
+            // Create response with user data including userId
             UserLoginResponse response = new UserLoginResponse();
             response.setToken("user_token_" + System.currentTimeMillis()); // Simple token for now
             response.setEmail(user.getEmail());
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
-            response.setUserId(user.getId());
+            response.setUserId(user.getId()); // This is important for ID-based routing
 
-            System.out.println("User login successful for: " + user.getEmail());
+            System.out.println("User login successful for: " + user.getEmail() + " (ID: " + user.getId() + ")");
 
             return ResponseEntity.ok(response);
 

@@ -240,6 +240,10 @@ function UserProfilePage() {
     navigate("/home");
   };
 
+  const handleCancel = () => {
+    navigate("/user-profile");
+  };
+
   if (fetchingProfile) {
     return (
       <div className="profile-container">

@@ -42,6 +42,7 @@ private PasswordEncoder passwordEncoder;
     private UserService userService;
     @Autowired
     private UserRepository userRepository;
+    
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserDTO userDTO) {
         try {
@@ -61,6 +62,7 @@ private PasswordEncoder passwordEncoder;
         }
         return ResponseEntity.ok(Map.of("message", "Account successfully deleted."));
     }
+    
     @PostMapping("/set-password")
 public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest request) {
     VerificationToken verificationToken = verificationTokenRepository.findByToken(request.getToken());
@@ -84,6 +86,7 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
     return ResponseEntity.ok("Password set successfully.");
 }
 
+    // Get profile by email (existing method)
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(@RequestParam String email) {
         try {
@@ -97,19 +100,7 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
             User user = optionalUser.get();
             
             // Create response DTO
-            UserProfileResponse profileResponse = new UserProfileResponse();
-            profileResponse.setId(user.getId());
-            profileResponse.setFirstName(user.getFirstName());
-            profileResponse.setLastName(user.getLastName());
-            profileResponse.setEmail(user.getEmail());
-            profileResponse.setPhoneNumber(user.getPhoneNumber());
-            profileResponse.setBirthDate(user.getBirthDate());
-            profileResponse.setBirthPlaceCity(user.getBirthPlaceCity());
-            profileResponse.setBirthPlaceCountry(user.getBirthPlaceCountry());
-            profileResponse.setGender(user.getGender());
-            profileResponse.setAddress(user.getAddress());
-            profileResponse.setEnabled(user.isEnabled());
-            profileResponse.setCreatedAt(user.getCreatedAt());
+            UserProfileResponse profileResponse = createUserProfileResponse(user);
 
             return ResponseEntity.ok(profileResponse);
 
@@ -119,6 +110,50 @@ public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest reques
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "An unexpected error occurred"));
         }
+    }
+
+    // NEW: Get profile by ID
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<?> getUserProfileById(@PathVariable Long id) {
+        try {
+            Optional<User> optionalUser = userRepository.findById(id);
+            
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found"));
+            }
+
+            User user = optionalUser.get();
+            
+            // Create response DTO
+            UserProfileResponse profileResponse = createUserProfileResponse(user);
+
+            return ResponseEntity.ok(profileResponse);
+
+        } catch (Exception e) {
+            System.err.println("Error fetching user profile by ID: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "An unexpected error occurred"));
+        }
+    }
+
+    // Helper method to create UserProfileResponse
+    private UserProfileResponse createUserProfileResponse(User user) {
+        UserProfileResponse profileResponse = new UserProfileResponse();
+        profileResponse.setId(user.getId());
+        profileResponse.setFirstName(user.getFirstName());
+        profileResponse.setLastName(user.getLastName());
+        profileResponse.setEmail(user.getEmail());
+        profileResponse.setPhoneNumber(user.getPhoneNumber());
+        profileResponse.setBirthDate(user.getBirthDate());
+        profileResponse.setBirthPlaceCity(user.getBirthPlaceCity());
+        profileResponse.setBirthPlaceCountry(user.getBirthPlaceCountry());
+        profileResponse.setGender(user.getGender());
+        profileResponse.setAddress(user.getAddress());
+        profileResponse.setEnabled(user.isEnabled());
+        profileResponse.setCreatedAt(user.getCreatedAt());
+        return profileResponse;
     }
 
     @PutMapping("/profile")
