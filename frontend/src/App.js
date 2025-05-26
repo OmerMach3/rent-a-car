@@ -14,7 +14,7 @@ import CarListingPage from "./components/CarListingPage";
 import AddCarPage from "./components/AddCarPage";
 import CarDetailsPage from "./components/CarDetailsPage";
 import EndUserLoginPage from "./components/EndUserLogin";
-import UserProfileViewPage from "./components/ProfileViewPage";
+import ProfileViewPage from "./components/ProfileViewPage";
 import UserProfilePage from "./components/UserProfilePage";
 import "./App.css";
 
@@ -36,8 +36,8 @@ function App() {
           {/* Hesap Silme */}
           <Route path="/delete-account" element={<DeleteAccount />} />
           {/* User Profile Routes - Updated with ID support */}
-          <Route path="/user-profile" element={<UserProfileViewPage />} />
-          <Route path="/user-profile/:id" element={<UserProfileViewPage />} />
+          <Route path="/user-profile" element={<ProfileViewPage />} />
+          <Route path="/user-profile/:id" element={<ProfileViewPage />} />
           <Route path="/update-profile" element={<UserProfilePage />} />
           <Route path="/update-profile/:id" element={<UserProfilePage />} />
           {/* Araç Yönetimi */}
