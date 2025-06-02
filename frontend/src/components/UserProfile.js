@@ -13,7 +13,7 @@ const UserProfile = () => {
         );
         setUser(response.data);
       } catch (error) {
-        setMessage("Profil yükleme hatası: " + error.response.data);
+        setMessage("error loading user profile: " + error.response.data);
       }
     };
     fetchUserProfile();
@@ -21,13 +21,13 @@ const UserProfile = () => {
 
   return (
     <div>
-      <h2>Kullanıcı Profili</h2>
+      <h2>User Profile</h2>
       {message && <p>{message}</p>}
       {user && (
         <div>
-          <p>Ad: {user.firstName}</p>
-          <p>Soyad: {user.lastName}</p>
-          <p>E-posta: {user.email}</p>
+          <p>Name: {user.firstName}</p>
+          <p>Surname:: {user.lastName}</p>
+          <p>E-mail: {user.email}</p>
         </div>
       )}
     </div>

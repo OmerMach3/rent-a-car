@@ -302,7 +302,7 @@ function ResetPassword() {
                 border: "1px solid #c3e6cb",
               }}
             >
-              <strong>✅ Success!</strong>
+              <strong> Success!</strong>
               <p style={{ margin: "10px 0 0 0" }}>{success}</p>
             </div>
 

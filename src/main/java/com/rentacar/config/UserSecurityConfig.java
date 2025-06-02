@@ -6,7 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
-// TEMPORARILY DISABLED - Using only SecurityConfig.java to avoid conflicts
+
 /*
 @Configuration
 @EnableWebSecurity
@@ -24,5 +24,3 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 */
 
-// This configuration is temporarily disabled to avoid conflicts with SecurityConfig.java
-// All security rules are now handled in SecurityConfig.java
