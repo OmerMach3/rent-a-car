@@ -18,10 +18,10 @@ public class EmailService {
         String confirmationLink = "http://localhost:3000/set-password?token=" + token;
 
         String htmlContent = "<div style='font-family: Arial, sans-serif; font-size: 14px;'>"
-                + "<h2 style='color: #2e6c80;'>Rentacar'a welcome!</h2>"
+                + "<h2 style='color: #2e6c80;'>Welcome to rent a car!</h2>"
                 + "<p>click the link:</p>"
                 + "<a href='" + confirmationLink + "' style='display: inline-block; padding: 10px 20px; color: white; background-color: #007bff; border-radius: 5px; text-decoration: none;'>Set Password</a>"
-                + "<p>If you didn’t request this, I don't carfe </p>"
+                + "<p>If you didn’t request this, I am sorry about that!</p>"
                 + "<p style='margin-top: 30px;'>Regards,<br>Omer Boru by Rent-a-car</p>"
                 + "</div>";
 
